@@ -1,0 +1,20 @@
+From: Sarah Lopez <sarah@company.com>
+To: you@gmail.com
+Subject: Team standup notes - Feb 17
+Date: Mon, 17 Feb 2026 08:00:00 +0000
+Message-ID: <DEF456@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<html>
+<body>
+<p>Here are the standup notes from this morning:</p>
+<ul>
+<li><strong>Alice:</strong> Finishing the API migration</li>
+<li><strong>Bob:</strong> Code review for PR #42</li>
+<li><strong>Carol:</strong> Bug fix in payment flow</li>
+</ul>
+<p>Please update your status in <a href="https://tracker.company.com/board?utm_source=email&utm_medium=notification">the tracker</a> by EOD.</p>
+<img src="https://tracking.example.com/pixel.gif" width="1" height="1" />
+</body>
+</html>

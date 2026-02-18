@@ -1,0 +1,11 @@
+From: Mike Chen <mike@acme.com>
+To: you@gmail.com
+Subject: Johnson deal pricing
+Date: Mon, 17 Feb 2026 09:30:00 +0000
+Message-ID: <CAK7abc123@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+Can we revisit the implementation fees? I think the base rate works, but $15K for implementation feels steep given we're handling most of the integration on our end.
+
+I've attached the revised proposal with our suggested breakdown. Take a look at section 3 when you get a chance.

@@ -1,0 +1,38 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.local
+
+# Tauri (legacy)
+packages/gui/src-tauri/target/
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# Secrets — never commit
+password.txt
+*.key
+*.pem
+credentials.json
+
+# Claude Code local config (created by bootstrap-claude-ops.sh)
+.claude/
+sessions/
+scripts/
+tools/
+README.md

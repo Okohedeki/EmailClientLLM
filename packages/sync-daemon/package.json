@@ -1,0 +1,36 @@
+{
+  "name": "@maildeck/sync-daemon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "setup": "tsx src/cli/setup.ts",
+    "disconnect": "tsx src/cli/disconnect.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@maildeck/shared": "*",
+    "chokidar": "^5.0.0",
+    "email-reply-parser": "^2.3.5",
+    "googleapis": "^171.4.0",
+    "html-to-text": "^9.0.5",
+    "imapflow": "^1.2.9",
+    "keytar": "^7.9.0",
+    "mailparser": "^3.9.3",
+    "nodemailer": "^8.0.1"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/html-to-text": "^9.0.4",
+    "@types/imapflow": "^1.0.23",
+    "@types/mailparser": "^3.4.6",
+    "@types/nodemailer": "^7.0.10"
+  }
+}

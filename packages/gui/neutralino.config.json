@@ -1,0 +1,40 @@
+{
+  "applicationId": "com.maildeck.app",
+  "version": "0.1.0",
+  "defaultMode": "window",
+  "url": "/",
+  "documentRoot": "dist/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": false
+  },
+  "nativeAllowList": [
+    "app.*",
+    "filesystem.*",
+    "os.*",
+    "computer.*",
+    "window.*"
+  ],
+  "modes": {
+    "window": {
+      "title": "MailDeck",
+      "width": 1100,
+      "height": 750,
+      "minWidth": 800,
+      "minHeight": 500,
+      "resizable": true,
+      "maximize": false,
+      "icon": "/icon.png"
+    }
+  },
+  "cli": {
+    "binaryName": "maildeck",
+    "resourcesPath": "/dist/",
+    "clientLibrary": "/dist/assets/__neutralino_globals.js",
+    "binaryVersion": "6.5.0",
+    "clientVersion": "6.5.0"
+  }
+}
