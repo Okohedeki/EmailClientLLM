@@ -18,7 +18,7 @@ import {
   type ThreadIndexEntry,
   type ContactEntry,
   type MessageFrontmatter,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 import { initAccountDirs, initThreadDirs } from "./directory-init.js";
 import { writeThreadMeta, writeMessage } from "./thread-writer.js";
 import {

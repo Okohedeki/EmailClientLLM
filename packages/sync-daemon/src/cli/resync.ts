@@ -4,7 +4,7 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { configPath, type AppConfig } from "@maildeck/shared";
+import { configPath, type AppConfig } from "@clawmail3/shared";
 import { getAppPassword } from "../sync/keychain.js";
 import { ImapClient } from "../sync/imap-client.js";
 import { imapFullSync } from "../sync/imap-sync.js";

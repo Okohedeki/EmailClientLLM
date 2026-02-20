@@ -6,10 +6,10 @@ import {
   sentDir,
   failedDir,
   logsDir,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 
 /**
- * Create the full directory tree for a MailDeck account.
+ * Create the full directory tree for a ClawMail3 account.
  * Safe to call multiple times (uses recursive: true).
  */
 export async function initAccountDirs(
@@ -35,7 +35,7 @@ export async function initThreadDirs(
   threadId: string,
   base?: string
 ): Promise<void> {
-  const { messagesDir, attachmentsDir } = await import("@maildeck/shared");
+  const { messagesDir, attachmentsDir } = await import("@clawmail3/shared");
   await Promise.all([
     mkdir(messagesDir(email, threadId, base), { recursive: true }),
     mkdir(attachmentsDir(email, threadId, base), { recursive: true }),

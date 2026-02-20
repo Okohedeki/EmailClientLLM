@@ -101,3 +101,13 @@ export function sentDir(email: string, base?: string): string {
 export function failedDir(email: string, base?: string): string {
   return join(accountDir(email, base), ACCOUNT_DIRS.failed);
 }
+
+/** ~/.maildeck/accounts/<email>/signature.txt */
+export function signaturePath(email: string, base?: string): string {
+  return join(accountDir(email, base), "signature.txt");
+}
+
+/** ~/.maildeck/daemon.pid */
+export function pidFilePath(base?: string): string {
+  return join(baseDir(base), "daemon.pid");
+}

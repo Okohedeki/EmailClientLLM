@@ -1,5 +1,5 @@
 {
-  "applicationId": "com.maildeck.app",
+  "applicationId": "com.clawmail3.app",
   "version": "0.1.0",
   "defaultMode": "window",
   "url": "/",
@@ -20,7 +20,7 @@
   ],
   "modes": {
     "window": {
-      "title": "MailDeck",
+      "title": "ClawMail3",
       "width": 1100,
       "height": 750,
       "minWidth": 800,
@@ -31,7 +31,7 @@
     }
   },
   "cli": {
-    "binaryName": "maildeck",
+    "binaryName": "clawmail3",
     "resourcesPath": "/dist/",
     "clientLibrary": "/dist/assets/__neutralino_globals.js",
     "binaryVersion": "6.5.0",

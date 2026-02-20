@@ -1,20 +1,33 @@
 {
-  "name": "@maildeck/sync-daemon",
+  "name": "clawmail3",
   "version": "0.1.0",
-  "private": true,
+  "license": "GPL-3.0",
+  "description": "Agent-native local email client — syncs Gmail to your filesystem for AI agents to read and send",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "clawmail3": "dist/cli/maildeck.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
     "start": "tsx src/index.ts",
+    "start:once": "tsx src/index.ts --once",
     "setup": "tsx src/cli/setup.ts",
     "disconnect": "tsx src/cli/disconnect.ts",
+    "resync": "tsx src/cli/resync.ts",
+    "compose": "tsx src/cli/compose.ts",
+    "send-test": "tsx src/cli/send-test.ts",
+    "clawmail3": "tsx src/cli/maildeck.ts",
+    "debug:imap": "tsx src/cli/imap-debug.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@maildeck/shared": "*",
+    "@clawmail3/shared": "*",
     "chokidar": "^5.0.0",
     "email-reply-parser": "^2.3.5",
     "googleapis": "^171.4.0",

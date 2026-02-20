@@ -3,7 +3,7 @@ import type {
   ContactEntry,
   ThreadMeta,
   MessageFrontmatter,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 import { ImapClient, type ImapMessage } from "./imap-client.js";
 import { cleanEmail } from "../cleaning/pipeline.js";
 import { writeThreadMeta, writeMessage } from "../storage/thread-writer.js";

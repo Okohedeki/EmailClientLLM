@@ -15,13 +15,16 @@ export interface ImapSchedulerOptions {
 
 /**
  * Polling-based sync scheduler for IMAP accounts.
- * Runs periodic full syncs (IMAP doesn't have Gmail's history API).
+ *
+ * - First run: full sync (depthDays, up to maxMessages)
+ * - Subsequent runs: recent only (last 2 days, up to 100 messages)
  */
 export class ImapScheduler {
   private options: ImapSchedulerOptions;
-  private lastUid = 0;
+  private firstSyncDone = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
+  private syncing = false;
 
   constructor(options: ImapSchedulerOptions) {
     this.options = options;
@@ -32,10 +35,11 @@ export class ImapScheduler {
     if (this.running) return;
     this.running = true;
 
-    // Initial sync
+    // Initial full sync
     await this.runSync();
+    this.firstSyncDone = true;
 
-    // Start polling
+    // Start polling (subsequent syncs are lighter)
     this.timer = setInterval(() => {
       this.runSync().catch((err) => this.options.onError?.(err));
     }, this.options.pollIntervalMs);
@@ -51,25 +55,32 @@ export class ImapScheduler {
   }
 
   private async runSync(): Promise<void> {
-    if (!this.running) return;
+    if (!this.running || this.syncing) return;
+    this.syncing = true;
 
     const client = new ImapClient(this.options.creds);
 
     try {
+      // First sync: use full depth + maxMessages
+      // Subsequent syncs: just last 2 days, up to 100 messages
+      const depthDays = this.firstSyncDone ? 2 : this.options.depthDays;
+      const maxMessages = this.firstSyncDone ? 100 : this.options.maxMessages;
+
       const result = await imapFullSync(client, {
         email: this.options.email,
         base: this.options.base,
-        depthDays: this.options.depthDays,
-        maxMessages: this.options.maxMessages,
+        depthDays,
+        maxMessages,
       });
 
-      this.lastUid = result.lastUid;
       this.options.onSync?.({
-        type: "full",
+        type: this.firstSyncDone ? "incremental" : "full",
         threadsUpdated: result.threadCount,
       });
     } catch (err: any) {
       this.options.onError?.(err);
+    } finally {
+      this.syncing = false;
     }
   }
 }

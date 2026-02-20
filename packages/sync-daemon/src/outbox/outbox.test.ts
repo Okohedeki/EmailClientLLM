@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, rm, readFile, readdir, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { atomicWriteJson, outboxDir, sentDir, failedDir } from "@maildeck/shared";
+import { atomicWriteJson, outboxDir, sentDir, failedDir } from "@clawmail3/shared";
 import { initAccountDirs } from "../storage/directory-init.js";
 import { validateDraft, parseDraft } from "./validator.js";
 import { transitionDraft, autoPromote, InvalidTransitionError } from "./state-machine.js";

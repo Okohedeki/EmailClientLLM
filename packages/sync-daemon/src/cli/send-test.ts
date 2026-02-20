@@ -13,7 +13,7 @@ import {
   atomicWriteJson,
   type AppConfig,
   type OutboxDraft,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 import { getAppPassword } from "../sync/keychain.js";
 import { sendViaSMTP } from "../sync/smtp-sender.js";
 import { transitionDraft } from "../outbox/state-machine.js";
@@ -56,10 +56,10 @@ async function main() {
   const draft: OutboxDraft = {
     action: "compose",
     to: [email], // Send to self
-    subject: "MailDeck test email",
-    body: `This is a test email from MailDeck.\n\nSent at: ${new Date().toISOString()}\n\nIf you're reading this, SMTP sending works!`,
+    subject: "ClawMail3 test email",
+    body: `This is a test email from ClawMail3.\n\nSent at: ${new Date().toISOString()}\n\nIf you're reading this, SMTP sending works!`,
     created_at: new Date().toISOString(),
-    created_by: "maildeck-test",
+    created_by: "clawmail3-test",
     status: "pending_review",
   };
 

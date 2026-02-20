@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { outboxDir, type OutboxDraft } from "@maildeck/shared";
+import nodemailer from "nodemailer";
+import { outboxDir, type OutboxDraft } from "@clawmail3/shared";
 import type { GmailClient } from "../sync/gmail-client.js";
 import { sendViaSMTP, type SmtpCredentials } from "../sync/smtp-sender.js";
 import { transitionDraft } from "./state-machine.js";
@@ -33,7 +34,7 @@ export async function sendDraft(
   try {
     if (sendClient.type === "oauth") {
       // Build RFC 822 message and send via Gmail API
-      const rfc822 = buildRfc822(draft, email);
+      const rfc822 = await buildRfc822(draft, email);
       const result = await sendClient.client.sendMessage(rfc822);
       await transitionDraft(email, draftFilename, "sent", {
         gmail_message_id: result.id,
@@ -55,11 +56,30 @@ export async function sendDraft(
 }
 
 /**
- * Build a minimal RFC 822 message string from a draft.
+ * Build an RFC 822 message string from a draft.
+ * Uses nodemailer to build proper MIME when attachments are present.
  */
-function buildRfc822(draft: OutboxDraft, fromEmail: string): string {
-  const lines: string[] = [];
+async function buildRfc822(draft: OutboxDraft, fromEmail: string): Promise<string> {
+  if (draft.attachments && draft.attachments.length > 0) {
+    // Use nodemailer to build multipart MIME message
+    const mail = nodemailer.createTransport({ streamTransport: true, buffer: true });
+    const info = await mail.sendMail({
+      from: fromEmail,
+      to: draft.to.join(", "),
+      cc: draft.cc?.join(", "),
+      subject: draft.subject,
+      text: draft.body,
+      attachments: draft.attachments.map((a) => ({
+        filename: a.filename,
+        path: a.path,
+        contentType: a.mime,
+      })),
+    });
+    return (info.message as Buffer).toString("utf-8");
+  }
 
+  // Simple plain-text message (no attachments)
+  const lines: string[] = [];
   lines.push(`From: ${fromEmail}`);
   lines.push(`To: ${draft.to.join(", ")}`);
   if (draft.cc && draft.cc.length > 0) {
@@ -71,6 +91,5 @@ function buildRfc822(draft: OutboxDraft, fromEmail: string): string {
   lines.push('Content-Type: text/plain; charset="UTF-8"');
   lines.push("");
   lines.push(draft.body);
-
   return lines.join("\r\n");
 }

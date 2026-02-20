@@ -1,4 +1,4 @@
-import type { MessageFrontmatter } from "@maildeck/shared";
+import type { MessageFrontmatter } from "@clawmail3/shared";
 import { parseMime, type ParsedAttachment } from "./mime-parser.js";
 import { htmlToCleanText } from "./html-to-text.js";
 import { stripQuotes } from "./quote-stripper.js";

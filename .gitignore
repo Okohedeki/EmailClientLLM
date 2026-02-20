@@ -15,6 +15,9 @@ Thumbs.db
 .env
 .env.local
 
+# User data
+.clawmail3/
+
 # Tauri (legacy)
 packages/gui/src-tauri/target/
 
@@ -35,4 +38,6 @@ credentials.json
 sessions/
 scripts/
 tools/
-README.md
+memory/
+bootstrap-claude-ops.sh
+architecture.md

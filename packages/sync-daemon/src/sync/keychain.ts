@@ -1,6 +1,6 @@
 import keytar from "keytar";
 
-const SERVICE_NAME = "maildeck";
+const SERVICE_NAME = "clawmail3";
 
 // ── App Password (IMAP/SMTP) ───────────────────────────────────────
 

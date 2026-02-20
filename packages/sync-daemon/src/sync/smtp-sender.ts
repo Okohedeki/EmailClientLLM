@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { OutboxDraft } from "@maildeck/shared";
+import type { OutboxDraft } from "@clawmail3/shared";
 
 export interface SmtpCredentials {
   email: string;
@@ -32,6 +32,11 @@ export async function sendViaSMTP(
     cc: draft.cc?.join(", "),
     subject: draft.subject,
     text: draft.body,
+    attachments: draft.attachments?.map((a) => ({
+      filename: a.filename,
+      path: a.path,
+      contentType: a.mime,
+    })),
   });
 
   return { messageId: result.messageId };

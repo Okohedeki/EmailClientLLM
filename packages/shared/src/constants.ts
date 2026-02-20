@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 /** Root data directory */
-export const MAILDECK_BASE_DIR = join(homedir(), ".maildeck");
+export const MAILDECK_BASE_DIR = join(homedir(), ".clawmail3");
 
 /** Status enums for outbox drafts */
 export const OUTBOX_STATUSES = [

@@ -1,5 +1,5 @@
 /**
- * Interactive setup CLI for MailDeck.
+ * Interactive setup CLI for ClawMail3.
  *
  * Usage:
  *   npx tsx packages/sync-daemon/src/cli/setup.ts
@@ -14,12 +14,13 @@ import readline from "node:readline";
 import {
   configPath,
   accountMetaPath,
+  signaturePath,
   atomicWriteJson,
   type AppConfig,
   type AccountMeta,
   DEFAULTS,
-} from "@maildeck/shared";
-import { readFile } from "node:fs/promises";
+} from "@clawmail3/shared";
+import { readFile, writeFile } from "node:fs/promises";
 import {
   storeAppPassword,
   storeClientCredentials,
@@ -73,7 +74,7 @@ function askHidden(question: string): Promise<string> {
 async function main() {
   console.log("");
   console.log("  ╔══════════════════════════════════════╗");
-  console.log("  ║       MailDeck — Account Setup       ║");
+  console.log("  ║       ClawMail3 — Account Setup       ║");
   console.log("  ╚══════════════════════════════════════╝");
   console.log("");
 
@@ -103,7 +104,7 @@ async function setupAppPassword() {
   console.log("  │                                               │");
   console.log("  │  1. Go to myaccount.google.com/apppasswords   │");
   console.log("  │  2. You may need to enable 2-Step Verification│");
-  console.log("  │  3. Create an app password (name: MailDeck)   │");
+  console.log("  │  3. Create an app password (name: ClawMail3)   │");
   console.log("  │  4. Copy the 16-character password            │");
   console.log("  │                                               │");
   console.log("  └───────────────────────────────────────────────┘");
@@ -289,6 +290,16 @@ async function setupOAuth() {
 
 // ── Shared helpers ──────────────────────────────────────────────────
 
+async function askSendMode(): Promise<boolean> {
+  console.log("");
+  console.log("  Send mode:");
+  console.log("    1. Auto-send (emails send immediately)");
+  console.log("    2. Require approval (drafts wait in outbox)");
+  console.log("");
+  const choice = await ask("  Choose [2]: ");
+  return choice.trim() !== "1"; // default = require approval (true)
+}
+
 async function saveAccountConfig(email: string): Promise<void> {
   let config: AppConfig;
   try {
@@ -303,8 +314,13 @@ async function saveAccountConfig(email: string): Promise<void> {
       accounts: [email],
     };
   }
+
+  // Ask send mode preference
+  config.review_before_send = await askSendMode();
+
   await atomicWriteJson(configPath(), config);
-  console.log(`  ✓ Config saved to ~/.maildeck/config.json`);
+  console.log(`  ✓ Config saved to ~/.clawmail3/config.json`);
+  console.log(`    Send mode: ${config.review_before_send ? "require approval" : "auto-send"}`);
 
   // Save account metadata
   const accountMeta: AccountMeta = {
@@ -316,10 +332,22 @@ async function saveAccountConfig(email: string): Promise<void> {
     poll_interval_seconds: DEFAULTS.pollIntervalSeconds,
   };
   await atomicWriteJson(accountMetaPath(email), accountMeta);
+
+  // Prompt for optional email signature
+  await askSignature(email);
+}
+
+async function askSignature(email: string): Promise<void> {
+  console.log("");
+  const sig = await ask("  Email signature (optional, press Enter to skip): ");
+  if (sig.trim()) {
+    await writeFile(signaturePath(email), sig.trim(), "utf-8");
+    console.log("  ✓ Signature saved");
+  }
 }
 
 function printDataLocations(email: string) {
-  console.log(`\n  Your email is now at: ~/.maildeck/accounts/${email}/`);
+  console.log(`\n  Your email is now at: ~/.clawmail3/accounts/${email}/`);
   console.log("    Index:    index/threads.jsonl");
   console.log("    Threads:  threads/<id>/messages/*.md");
   console.log("    Contacts: index/contacts.jsonl");
@@ -343,7 +371,7 @@ function waitForOAuthRedirect(): Promise<string> {
 
       if (code) {
         res.writeHead(200, { "Content-Type": "text/html" });
-        res.end("<h2>✓ MailDeck authorized!</h2><p>You can close this tab and return to the terminal.</p>");
+        res.end("<h2>✓ ClawMail3 authorized!</h2><p>You can close this tab and return to the terminal.</p>");
         server.close();
         resolve(code);
         return;

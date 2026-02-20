@@ -1,6 +1,6 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { attachmentsDir } from "@maildeck/shared";
+import { attachmentsDir } from "@clawmail3/shared";
 import type { ParsedAttachment } from "../cleaning/index.js";
 
 /**

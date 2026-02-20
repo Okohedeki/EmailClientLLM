@@ -1,12 +1,13 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, unlink } from "node:fs/promises";
 import {
   configPath,
   accountMetaPath,
+  pidFilePath,
   atomicWriteJson,
   type AppConfig,
   type AccountMeta,
   DEFAULTS,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 import { initAccountDirs } from "./storage/directory-init.js";
 import { getAppPassword } from "./sync/keychain.js";
 import { ImapScheduler } from "./sync/imap-scheduler.js";
@@ -95,7 +96,7 @@ async function main() {
   const opts = parseArgs();
 
   await initLogger(opts.base);
-  await log("info", "MailDeck sync daemon starting...");
+  await log("info", "ClawMail3 sync daemon starting...");
 
   const config = await loadConfig(opts.base);
 
@@ -238,13 +239,18 @@ async function main() {
     await watcher.start();
   }
 
-  await log("info", `Daemon running for ${accounts.length} account(s)`);
+  // Write PID file
+  const pidPath = pidFilePath(opts.base);
+  await writeFile(pidPath, String(process.pid), "utf-8");
+
+  await log("info", `Daemon running for ${accounts.length} account(s) (PID ${process.pid})`);
 
   if (opts.once) {
     await log("info", "Single sync complete (--once). Shutting down.");
     for (const s of schedulers) s.stop();
     for (const s of oauthSchedulers) s.stop();
     for (const w of watchers) await w.stop();
+    await unlink(pidPath).catch(() => {});
     process.exit(0);
   }
 
@@ -254,6 +260,8 @@ async function main() {
     for (const s of schedulers) s.stop();
     for (const s of oauthSchedulers) s.stop();
     for (const w of watchers) await w.stop();
+    // Remove PID file
+    await unlink(pidPath).catch(() => {});
     await log("info", "Daemon stopped.");
     process.exit(0);
   };

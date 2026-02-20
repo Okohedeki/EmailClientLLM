@@ -82,6 +82,12 @@ export type OutboxStatus =
   | "sent"
   | "failed";
 
+export interface OutboxAttachment {
+  filename: string;
+  path: string; // absolute path to file on disk
+  mime: string;
+}
+
 export interface OutboxDraft {
   action: "reply" | "compose";
   thread_id?: string;
@@ -90,6 +96,7 @@ export interface OutboxDraft {
   cc?: string[];
   subject: string;
   body: string;
+  attachments?: OutboxAttachment[];
   created_at: string;
   created_by: string;
   status: OutboxStatus;

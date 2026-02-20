@@ -11,7 +11,7 @@ export default function Layout() {
     <div className="flex h-screen">
       {/* Sidebar */}
       <nav className="w-56 bg-surface-1 border-r border-surface-3 flex flex-col p-4 gap-1">
-        <h1 className="text-lg font-bold text-accent mb-6 px-2">MailDeck</h1>
+        <h1 className="text-lg font-bold text-accent mb-6 px-2">ClawMail3</h1>
         {navItems.map((item) => (
           <NavLink
             key={item.to}

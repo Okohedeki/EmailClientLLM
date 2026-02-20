@@ -7,7 +7,7 @@ import {
   messageFilename,
   type ThreadMeta,
   type MessageFrontmatter,
-} from "@maildeck/shared";
+} from "@clawmail3/shared";
 import { initThreadDirs } from "./directory-init.js";
 
 /**

@@ -1,5 +1,5 @@
-import type { OutboxDraft, OutboxStatus } from "@maildeck/shared";
-import { OUTBOX_STATUSES } from "@maildeck/shared";
+import type { OutboxDraft, OutboxStatus } from "@clawmail3/shared";
+import { OUTBOX_STATUSES } from "@clawmail3/shared";
 
 export interface ValidationResult {
   valid: boolean;
