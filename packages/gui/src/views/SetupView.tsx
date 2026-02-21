@@ -22,7 +22,7 @@ export default function SetupView() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface-0">
       <div className="w-full max-w-md p-8">
-        <h1 className="text-2xl font-bold text-accent mb-2">ClawMail3</h1>
+        <h1 className="text-2xl font-bold text-accent mb-2">MailDeck</h1>
         <p className="text-gray-400 text-sm mb-8">
           Agent-native email for your local machine
         </p>
@@ -39,7 +39,7 @@ export default function SetupView() {
           </code>
           <p className="text-xs text-gray-500 mb-4">
             This will securely store your credentials in the OS keychain and
-            sync your recent email to ~/.clawmail3/
+            sync your recent email to ~/.maildeck/
           </p>
           <button
             onClick={() => navigate("/")}

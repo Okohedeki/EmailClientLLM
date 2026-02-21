@@ -24,7 +24,7 @@ export async function createOAuth2Client() {
 }
 
 /**
- * Generate the OAuth consent URL for a user to authorize ClawMail3.
+ * Generate the OAuth consent URL for a user to authorize MailDeck.
  */
 export async function getAuthUrl(): Promise<string> {
   const client = await createOAuth2Client();

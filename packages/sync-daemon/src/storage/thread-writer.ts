@@ -7,7 +7,7 @@ import {
   messageFilename,
   type ThreadMeta,
   type MessageFrontmatter,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { initThreadDirs } from "./directory-init.js";
 
 /**
@@ -46,6 +46,16 @@ export async function writeMessage(
 }
 
 /**
+ * Wrap a value in double quotes if it contains YAML-special characters.
+ */
+function yamlSafeValue(value: string): string {
+  if (/[:#\[\]{}|>&*!']/.test(value) || value.startsWith("-") || value.startsWith(" ")) {
+    return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  return value;
+}
+
+/**
  * Render a message as markdown with YAML frontmatter.
  */
 function renderMessageMd(fm: MessageFrontmatter, body: string): string {
@@ -58,11 +68,12 @@ function renderMessageMd(fm: MessageFrontmatter, body: string): string {
   if (fm.references && fm.references.length > 0) {
     lines.push(`references: ${JSON.stringify(fm.references)}`);
   }
-  lines.push(`from: ${fm.from}`);
-  lines.push(`from_name: ${fm.from_name}`);
-  lines.push(`to: ${fm.to}`);
-  if (fm.cc) lines.push(`cc: ${fm.cc}`);
+  lines.push(`from: ${yamlSafeValue(fm.from)}`);
+  lines.push(`from_name: ${yamlSafeValue(fm.from_name)}`);
+  lines.push(`to: ${yamlSafeValue(fm.to)}`);
+  if (fm.cc) lines.push(`cc: ${yamlSafeValue(fm.cc)}`);
   lines.push(`date: ${fm.date}`);
+  if (fm.uid != null) lines.push(`uid: ${fm.uid}`);
   lines.push("---");
   lines.push("");
   lines.push(body);

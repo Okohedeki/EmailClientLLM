@@ -3,7 +3,7 @@ import type {
   ContactEntry,
   ThreadMeta,
   MessageFrontmatter,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { ImapClient, type ImapMessage } from "./imap-client.js";
 import { cleanEmail } from "../cleaning/pipeline.js";
 import { writeThreadMeta, writeMessage } from "../storage/thread-writer.js";
@@ -53,6 +53,86 @@ export async function imapFullSync(
     const lastUid = messages.length > 0
       ? Math.max(...messages.map((m) => m.uid))
       : 0;
+
+    await client.disconnect();
+    return { lastUid, threadCount: threads.size };
+  } catch (err) {
+    await client.disconnect().catch(() => {});
+    throw err;
+  }
+}
+
+/**
+ * Incremental sync via IMAP — fetch only messages newer than lastUid.
+ */
+export async function imapIncrementalSync(
+  client: ImapClient,
+  opts: Omit<ImapSyncOptions, "depthDays" | "maxMessages"> & { lastUid: number }
+): Promise<{ lastUid: number; threadCount: number }> {
+  const { email, base, lastUid, onProgress } = opts;
+
+  await initAccountDirs(email, base);
+  await client.connect();
+
+  try {
+    const messages = await client.fetchSince(lastUid);
+    onProgress?.(0, messages.length);
+
+    if (messages.length === 0) {
+      await client.disconnect();
+      return { lastUid, threadCount: 0 };
+    }
+
+    const threads = groupIntoThreads(messages, email);
+
+    let processed = 0;
+    for (const [threadId, threadMsgs] of threads) {
+      await processThread(email, threadId, threadMsgs, base);
+      processed++;
+      onProgress?.(processed, threads.size);
+    }
+
+    const newLastUid = Math.max(...messages.map((m) => m.uid));
+
+    await client.disconnect();
+    return { lastUid: newLastUid, threadCount: threads.size };
+  } catch (err) {
+    await client.disconnect().catch(() => {});
+    throw err;
+  }
+}
+
+/**
+ * Unread-only sync via IMAP — fetch all UNSEEN messages, no date range or cap.
+ */
+export async function imapUnreadSync(
+  client: ImapClient,
+  opts: Omit<ImapSyncOptions, "depthDays" | "maxMessages">
+): Promise<{ lastUid: number; threadCount: number }> {
+  const { email, base, onProgress } = opts;
+
+  await initAccountDirs(email, base);
+  await client.connect();
+
+  try {
+    const messages = await client.fetchUnread();
+    onProgress?.(0, messages.length);
+
+    if (messages.length === 0) {
+      await client.disconnect();
+      return { lastUid: 0, threadCount: 0 };
+    }
+
+    const threads = groupIntoThreads(messages, email);
+
+    let processed = 0;
+    for (const [threadId, threadMsgs] of threads) {
+      await processThread(email, threadId, threadMsgs, base);
+      processed++;
+      onProgress?.(processed, threads.size);
+    }
+
+    const lastUid = Math.max(...messages.map((m) => m.uid));
 
     await client.disconnect();
     return { lastUid, threadCount: threads.size };
@@ -140,6 +220,9 @@ async function processThread(
   for (const msg of messages) {
     const raw = msg.raw.toString("utf-8");
     const cleaned = await cleanEmail(raw, threadId, `uid${msg.uid}`);
+
+    // Attach IMAP UID to frontmatter for mark-read support
+    cleaned.frontmatter.uid = msg.uid;
 
     // Write message file
     await writeMessage(email, threadId, cleaned.frontmatter, cleaned.body, base);

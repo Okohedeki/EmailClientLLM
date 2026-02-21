@@ -130,7 +130,7 @@ export class ImapClient {
   async fetchSince(lastUid: number): Promise<ImapMessage[]> {
     if (!this.client) throw new Error("Not connected");
 
-    const lock = await this.client.getMailboxLock("INBOX");
+    const lock = await this.client.getMailboxLock("[Gmail]/All Mail");
     try {
       const messages: ImapMessage[] = [];
       const range = `${lastUid + 1}:*`;
@@ -149,6 +149,47 @@ export class ImapClient {
       }
 
       return messages;
+    } finally {
+      lock.release();
+    }
+  }
+
+  /** Fetch all unread (UNSEEN) messages from [Gmail]/All Mail. No date range or cap. */
+  async fetchUnread(): Promise<ImapMessage[]> {
+    if (!this.client) throw new Error("Not connected");
+
+    const lock = await this.client.getMailboxLock("[Gmail]/All Mail");
+    try {
+      const messages: ImapMessage[] = [];
+
+      const uids = await this.client.search({ seen: false }, { uid: true });
+      if (!uids || uids.length === 0) return [];
+
+      for await (const msg of this.client.fetch(uids, {
+        source: true,
+        flags: true,
+      }, { uid: true })) {
+        messages.push({
+          uid: msg.uid,
+          raw: msg.source!,
+          flags: msg.flags ?? new Set(),
+        });
+      }
+
+      return messages;
+    } finally {
+      lock.release();
+    }
+  }
+
+  /** Mark the given UIDs as read (\Seen) on the IMAP server. */
+  async markRead(uids: number[]): Promise<void> {
+    if (!this.client) throw new Error("Not connected");
+    if (uids.length === 0) return;
+
+    const lock = await this.client.getMailboxLock("[Gmail]/All Mail");
+    try {
+      await this.client.messageFlagsAdd(uids, ["\\Seen"], { uid: true });
     } finally {
       lock.release();
     }

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import chokidar from "chokidar";
-import { outboxDir, type OutboxDraft } from "@clawmail3/shared";
+import { outboxDir, type OutboxDraft } from "@maildeck/shared";
 import { validateDraft } from "./validator.js";
 import { autoPromote } from "./state-machine.js";
 import { sendDraft, type SendClient } from "./sender.js";

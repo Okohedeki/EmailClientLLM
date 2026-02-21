@@ -1,5 +1,5 @@
 import type { GmailClient } from "./gmail-client.js";
-import type { ThreadIndexEntry, ContactEntry, ThreadMeta, AttachmentMeta } from "@clawmail3/shared";
+import type { ThreadIndexEntry, ContactEntry, ThreadMeta, AttachmentMeta } from "@maildeck/shared";
 import { cleanEmail } from "../cleaning/pipeline.js";
 import { writeThreadMeta, writeMessage } from "../storage/thread-writer.js";
 import { upsertThreadIndex, upsertContactIndex } from "../storage/index-writer.js";

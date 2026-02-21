@@ -1,11 +1,11 @@
 /**
  * IPC layer using Neutralinojs filesystem API.
  *
- * Reads directly from ~/.clawmail3/ — the same files agents read.
+ * Reads directly from ~/.maildeck/ — the same files agents read.
  * No backend server needed. All parsing happens in the browser.
  */
 
-// Types inlined to avoid importing Node.js-dependent @clawmail3/shared in the browser
+// Types inlined to avoid importing Node.js-dependent @maildeck/shared in the browser
 
 export interface ThreadIndexEntry {
   id: string;
@@ -86,7 +86,7 @@ async function getHomeDir(): Promise<string> {
 
 async function baseDir(): Promise<string> {
   const home = await getHomeDir();
-  return `${home}/.clawmail3`;
+  return `${home}/.maildeck`;
 }
 
 async function accountPath(email: string): Promise<string> {

@@ -1,5 +1,5 @@
 /**
- * Disconnect a Gmail account from ClawMail3.
+ * Disconnect a Gmail account from MailDeck.
  *
  * Usage:
  *   npx tsx packages/sync-daemon/src/cli/disconnect.ts [email]
@@ -7,7 +7,7 @@
  * What it does:
  *   1. Deletes OAuth tokens from OS keychain
  *   2. Removes the account from config.json
- *   3. Optionally deletes synced data from ~/.clawmail3/accounts/<email>/
+ *   3. Optionally deletes synced data from ~/.maildeck/accounts/<email>/
  */
 
 import readline from "node:readline";
@@ -18,7 +18,7 @@ import {
   accountDir,
   atomicWriteJson,
   type AppConfig,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { deleteAllCredentials } from "../sync/keychain.js";
 
 const rl = readline.createInterface({
@@ -32,7 +32,7 @@ function ask(question: string): Promise<string> {
 
 async function main() {
   console.log("\n╔══════════════════════════════════════╗");
-  console.log("║     ClawMail3 — Disconnect Account    ║");
+  console.log("║     MailDeck — Disconnect Account    ║");
   console.log("╚══════════════════════════════════════╝\n");
 
   // Load config
@@ -81,7 +81,7 @@ async function main() {
 
   // Step 3: Optionally delete synced data
   const deleteData = await ask(
-    `\nDelete synced data at ~/.clawmail3/accounts/${email}/ ? (y/N): `
+    `\nDelete synced data at ~/.maildeck/accounts/${email}/ ? (y/N): `
   );
   if (deleteData.toLowerCase() === "y") {
     const dir = accountDir(email);
@@ -98,7 +98,7 @@ async function main() {
     );
     if (deleteCreds.toLowerCase() === "y") {
       const keytar = await import("keytar");
-      await keytar.default.deletePassword("clawmail3", "__client_credentials__");
+      await keytar.default.deletePassword("maildeck", "__client_credentials__");
       console.log("✓ Client credentials removed.");
     }
   }

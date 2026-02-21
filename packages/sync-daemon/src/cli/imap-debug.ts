@@ -7,7 +7,7 @@
 import { ImapFlow } from "imapflow";
 import { getAppPassword } from "../sync/keychain.js";
 import { readFile } from "node:fs/promises";
-import { configPath, type AppConfig } from "@clawmail3/shared";
+import { configPath, type AppConfig } from "@maildeck/shared";
 
 async function main() {
   let email: string;

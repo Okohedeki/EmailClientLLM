@@ -29,6 +29,7 @@ export interface AttachmentMeta {
   filename: string;
   mime: string;
   size_bytes: number;
+  skipped?: boolean;
 }
 
 export interface ThreadMeta {
@@ -71,6 +72,7 @@ export interface MessageFrontmatter {
   to: string;
   cc?: string;
   date: string; // ISO 8601
+  uid?: number;
 }
 
 // ── Outbox Draft ─────────────────────────────────────────────────────
@@ -116,6 +118,7 @@ export interface AccountMeta {
   sync_state: "idle" | "syncing" | "error";
   last_sync: string | null;
   history_id: string | null;
+  last_uid: number | null;
   sync_depth_days: number;
   poll_interval_seconds: number;
 }

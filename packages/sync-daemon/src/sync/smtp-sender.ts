@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { OutboxDraft } from "@clawmail3/shared";
+import type { OutboxDraft } from "@maildeck/shared";
 
 export interface SmtpCredentials {
   email: string;

@@ -6,7 +6,7 @@ import {
   contactsIndexPath,
   type ThreadIndexEntry,
   type ContactEntry,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 
 /**
  * Upsert a thread into threads.jsonl, then re-sort newest-first by last_date.

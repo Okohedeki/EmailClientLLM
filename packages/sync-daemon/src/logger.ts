@@ -1,6 +1,6 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { logsDir } from "@clawmail3/shared";
+import { logsDir } from "@maildeck/shared";
 
 let logDir: string | null = null;
 

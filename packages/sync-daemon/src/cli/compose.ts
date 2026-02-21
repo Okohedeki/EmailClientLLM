@@ -13,7 +13,7 @@ import {
   atomicWriteJson,
   type AppConfig,
   type OutboxDraft,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { initAccountDirs } from "../storage/directory-init.js";
 import * as readline from "node:readline";
 
@@ -77,7 +77,7 @@ async function main() {
     subject,
     body,
     created_at: new Date().toISOString(),
-    created_by: "clawmail3-cli",
+    created_by: "maildeck-cli",
     status: config.review_before_send ? "pending_review" : "ready_to_send",
   };
 

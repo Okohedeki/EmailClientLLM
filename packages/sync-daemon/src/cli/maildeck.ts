@@ -1,22 +1,23 @@
 #!/usr/bin/env node
 /**
- * Unified CLI entry point for ClawMail3.
+ * Unified CLI entry point for MailDeck.
  *
  * Every command returns structured JSON to stdout:
  *   { ok: true, data: ... }
  *   { ok: false, error: "..." }
  *
  * Usage:
- *   clawmail3 setup
- *   clawmail3 start
- *   clawmail3 stop
- *   clawmail3 status
- *   clawmail3 sync [--account EMAIL]
- *   clawmail3 send --to X --subject Y --body Z [--cc C] [--attach FILE]... [--no-signature]
- *   clawmail3 compose --to X --subject Y --body Z [--cc C] [--attach FILE]... [--no-signature]
- *   clawmail3 search <query>
- *   clawmail3 read <thread_id>
- *   clawmail3 threads [--limit N]
+ *   maildeck setup
+ *   maildeck start
+ *   maildeck stop
+ *   maildeck status
+ *   maildeck sync [--account EMAIL] [--unread] [--full] [--days N] [--max N]
+ *   maildeck send --to X --subject Y --body Z [--cc C] [--attach FILE]... [--no-signature]
+ *   maildeck compose --to X --subject Y --body Z [--cc C] [--attach FILE]... [--no-signature]
+ *   maildeck search <query>
+ *   maildeck read <thread_id>
+ *   maildeck threads [--limit N] [--unread]
+ *   maildeck mark-read <thread_id>
  */
 
 import { readFile, readdir, access } from "node:fs/promises";
@@ -37,6 +38,7 @@ import {
   signaturePath,
   atomicWriteJson,
   readJsonl,
+  upsertJsonl,
   type AppConfig,
   type AccountMeta,
   type ThreadIndexEntry,
@@ -44,7 +46,7 @@ import {
   type OutboxDraft,
   type OutboxAttachment,
   DEFAULTS,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 
 // ── JSON output helpers ─────────────────────────────────────────────
 
@@ -93,7 +95,7 @@ async function loadConfig(base?: string): Promise<AppConfig> {
     const raw = await readFile(configPath(base), "utf-8");
     return JSON.parse(raw) as AppConfig;
   } catch {
-    fail("No config found. Run: clawmail3 setup");
+    fail("No config found. Run: maildeck setup");
   }
 }
 
@@ -107,6 +109,7 @@ async function loadAccountMeta(email: string, base?: string): Promise<AccountMet
       sync_state: "idle",
       last_sync: null,
       history_id: null,
+      last_uid: null,
       sync_depth_days: DEFAULTS.syncDepthDays,
       poll_interval_seconds: DEFAULTS.pollIntervalSeconds,
     };
@@ -115,7 +118,7 @@ async function loadAccountMeta(email: string, base?: string): Promise<AccountMet
 
 function getFirstAccount(config: AppConfig): string {
   if (config.accounts.length === 0) {
-    fail("No accounts configured. Run: clawmail3 setup");
+    fail("No accounts configured. Run: maildeck setup");
   }
   return config.accounts[0];
 }
@@ -298,26 +301,43 @@ async function cmdSync(flags: Record<string, string>) {
   const appPassword = await getAppPassword(email);
 
   if (!appPassword) {
-    fail(`No credentials found for ${email}. Run: clawmail3 setup`);
+    fail(`No credentials found for ${email}. Run: maildeck setup`);
   }
 
   const { ImapClient } = await import("../sync/imap-client.js");
-  const { imapFullSync } = await import("../sync/imap-sync.js");
+  const { imapFullSync, imapIncrementalSync, imapUnreadSync } = await import("../sync/imap-sync.js");
 
   const client = new ImapClient({ email, appPassword });
-  const depthDays = flags.days ? parseInt(flags.days, 10) : 7;
-  const maxMessages = flags.max ? parseInt(flags.max, 10) : 200;
+  const meta = await loadAccountMeta(email);
 
-  const result = await imapFullSync(client, {
-    email,
-    depthDays,
-    maxMessages,
-  });
+  let result: { lastUid: number; threadCount: number };
+  const forceFullSync = flags.full === "true";
+  const unreadOnly = flags.unread === "true";
+
+  if (unreadOnly) {
+    // Fetch all unread messages (no date range, no cap)
+    result = await imapUnreadSync(client, { email });
+  } else if (!forceFullSync && meta.last_uid && meta.last_uid > 0) {
+    // Incremental sync using stored UID
+    result = await imapIncrementalSync(client, {
+      email,
+      lastUid: meta.last_uid,
+    });
+  } else {
+    // Full sync
+    const depthDays = flags.days ? parseInt(flags.days, 10) : 7;
+    const maxMessages = flags.max ? parseInt(flags.max, 10) : 200;
+    result = await imapFullSync(client, {
+      email,
+      depthDays,
+      maxMessages,
+    });
+  }
 
   // Update account metadata
-  const meta = await loadAccountMeta(email);
   meta.last_sync = new Date().toISOString();
   meta.sync_state = "idle";
+  meta.last_uid = result.lastUid;
   await atomicWriteJson(accountMetaPath(email), meta);
 
   ok({
@@ -340,7 +360,7 @@ async function cmdSend(flags: Record<string, string>, multiFlags: Record<string,
   const appPassword = await getAppPassword(email);
 
   if (!appPassword) {
-    fail(`No credentials found for ${email}. Run: clawmail3 setup`);
+    fail(`No credentials found for ${email}. Run: maildeck setup`);
   }
 
   // Resolve attachments
@@ -364,7 +384,7 @@ async function cmdSend(flags: Record<string, string>, multiFlags: Record<string,
     body,
     attachments,
     created_at: new Date().toISOString(),
-    created_by: "clawmail3-cli",
+    created_by: "maildeck-cli",
     status: "ready_to_send",
   };
 
@@ -403,7 +423,7 @@ async function cmdCompose(flags: Record<string, string>, multiFlags: Record<stri
     body,
     attachments,
     created_at: new Date().toISOString(),
-    created_by: "clawmail3-cli",
+    created_by: "maildeck-cli",
     status: config.review_before_send ? "pending_review" : "ready_to_send",
   };
 
@@ -570,12 +590,93 @@ async function cmdRead(positionalArgs: string[], flags: Record<string, string>) 
   ok({ meta, messages });
 }
 
+async function cmdMarkRead(positionalArgs: string[], flags: Record<string, string>) {
+  const threadId = positionalArgs[0];
+  if (!threadId) fail("Missing thread_id argument");
+
+  const config = await loadConfig();
+  const email = flags.account ?? getFirstAccount(config);
+
+  // 1. Read thread.json
+  const tDir = threadDir(email, threadId);
+  let meta: ThreadMeta;
+  try {
+    const raw = await readFile(join(tDir, "thread.json"), "utf-8");
+    meta = JSON.parse(raw);
+  } catch {
+    fail(`Thread not found: ${threadId}`);
+  }
+
+  // 2. Read all .md files in messages/ and extract UIDs from frontmatter
+  const msgsPath = messagesDir(email, threadId);
+  let msgFiles: string[];
+  try {
+    msgFiles = (await readdir(msgsPath)).filter((f) => f.endsWith(".md")).sort();
+  } catch {
+    msgFiles = [];
+  }
+
+  const uids: number[] = [];
+  for (const mf of msgFiles) {
+    const content = await readFile(join(msgsPath, mf), "utf-8");
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (fmMatch) {
+      const uidMatch = fmMatch[1].match(/^uid:\s*(\d+)$/m);
+      if (uidMatch) {
+        uids.push(parseInt(uidMatch[1], 10));
+      }
+    }
+  }
+
+  if (uids.length === 0) {
+    fail("No IMAP UIDs found in thread messages. Re-sync with --unread to populate UIDs.");
+  }
+
+  // 3. Connect to IMAP and mark as read
+  const { getAppPassword } = await import("../sync/keychain.js");
+  const appPassword = await getAppPassword(email);
+  if (!appPassword) {
+    fail(`No credentials found for ${email}. Run: maildeck setup`);
+  }
+
+  const { ImapClient } = await import("../sync/imap-client.js");
+  const client = new ImapClient({ email, appPassword });
+  await client.connect();
+  try {
+    await client.markRead(uids);
+    await client.disconnect();
+  } catch (err) {
+    await client.disconnect().catch(() => {});
+    throw err;
+  }
+
+  // 4. Update local thread.json → unread: false
+  meta.unread = false;
+  await atomicWriteJson(join(tDir, "thread.json"), meta);
+
+  // 5. Update threads.jsonl → unread: false for this entry
+  const indexPath = threadsIndexPath(email);
+  const entries = await readJsonl<ThreadIndexEntry>(indexPath);
+  const entry = entries.find((e) => e.id === threadId);
+  if (entry) {
+    entry.unread = false;
+    await upsertJsonl(indexPath, entry, "id");
+  }
+
+  ok({ thread_id: threadId, uids_marked: uids.length, unread: false });
+}
+
 async function cmdThreads(flags: Record<string, string>) {
   const config = await loadConfig();
   const email = flags.account ?? getFirstAccount(config);
   const limit = flags.limit ? parseInt(flags.limit, 10) : 20;
 
-  const entries = await readJsonl<ThreadIndexEntry>(threadsIndexPath(email));
+  let entries = await readJsonl<ThreadIndexEntry>(threadsIndexPath(email));
+
+  // Filter unread if requested
+  if (flags.unread === "true") {
+    entries = entries.filter((e) => e.unread);
+  }
 
   // Sort by last_date descending
   entries.sort((a, b) => new Date(b.last_date).getTime() - new Date(a.last_date).getTime());
@@ -624,6 +725,9 @@ async function main() {
       case "threads":
         await cmdThreads(flags);
         break;
+      case "mark-read":
+        await cmdMarkRead(args, flags);
+        break;
       case "help":
       default:
         ok({
@@ -632,12 +736,13 @@ async function main() {
             "start      — Start daemon in background",
             "stop       — Stop running daemon",
             "status     — Show daemon & account status",
-            "sync       — One-shot sync (--account, --days, --max)",
+            "sync       — One-shot sync (--account, --days, --max, --unread, --full)",
             "send       — Send email immediately (--to, --subject, --body, --cc, --attach, --no-signature)",
             "compose    — Drop draft in outbox (--to, --subject, --body, --cc, --attach, --no-signature)",
             "search     — Search messages (positional query)",
             "read       — Read a thread (positional thread_id)",
-            "threads    — List recent threads (--limit N)",
+            "threads    — List recent threads (--limit N, --unread)",
+            "mark-read  — Mark a thread as read on IMAP server (positional thread_id)",
           ],
         });
     }

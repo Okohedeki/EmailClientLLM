@@ -7,7 +7,7 @@ import {
   type AppConfig,
   type AccountMeta,
   DEFAULTS,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { initAccountDirs } from "./storage/directory-init.js";
 import { getAppPassword } from "./sync/keychain.js";
 import { ImapScheduler } from "./sync/imap-scheduler.js";
@@ -84,6 +84,7 @@ async function loadAccountMeta(
       sync_state: "idle",
       last_sync: null,
       history_id: null,
+      last_uid: null,
       sync_depth_days: DEFAULTS.syncDepthDays,
       poll_interval_seconds: DEFAULTS.pollIntervalSeconds,
     };
@@ -96,7 +97,7 @@ async function main() {
   const opts = parseArgs();
 
   await initLogger(opts.base);
-  await log("info", "ClawMail3 sync daemon starting...");
+  await log("info", "MailDeck sync daemon starting...");
 
   const config = await loadConfig(opts.base);
 

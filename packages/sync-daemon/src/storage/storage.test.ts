@@ -18,7 +18,7 @@ import {
   type ThreadIndexEntry,
   type ContactEntry,
   type MessageFrontmatter,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { initAccountDirs, initThreadDirs } from "./directory-init.js";
 import { writeThreadMeta, writeMessage } from "./thread-writer.js";
 import {
@@ -143,6 +143,34 @@ describe("writeMessage", () => {
     expect(content).toContain("id: msg_001");
     expect(content).toContain("from: sender@test.com");
     expect(content).toContain("Hello, this is the message body.");
+  });
+
+  it("escapes YAML-special characters in from_name", async () => {
+    const frontmatter: MessageFrontmatter = {
+      id: "msg_yaml",
+      gmail_message_id: "yaml1",
+      thread_id: THREAD_ID,
+      from: "support@company.com",
+      from_name: "Company: Support",
+      to: "you@gmail.com",
+      date: "2026-02-17T10:00:00Z",
+    };
+
+    const filename = await writeMessage(
+      EMAIL,
+      THREAD_ID,
+      frontmatter,
+      "Test body",
+      base
+    );
+
+    const filePath = join(messagesDir(EMAIL, THREAD_ID, base), filename);
+    const content = await readFile(filePath, "utf-8");
+
+    // Value with colon must be quoted for valid YAML
+    expect(content).toContain('from_name: "Company: Support"');
+    // Plain email without special chars should NOT be quoted
+    expect(content).toContain("from: support@company.com");
   });
 
   it("sorts multiple messages chronologically by filename", async () => {
@@ -318,5 +346,42 @@ describe("writeAttachments", () => {
   it("returns empty array for no attachments", async () => {
     const results = await writeAttachments(EMAIL, THREAD_ID, [], base);
     expect(results).toEqual([]);
+  });
+
+  it("skips oversized attachments but records metadata", async () => {
+    const bigSize = 11 * 1024 * 1024; // 11 MB — over 10 MB limit
+    const attachments = [
+      {
+        filename: "small.txt",
+        contentType: "text/plain",
+        content: Buffer.from("small"),
+        size: 5,
+      },
+      {
+        filename: "huge.bin",
+        contentType: "application/octet-stream",
+        content: Buffer.alloc(1), // content doesn't matter, size field is checked
+        size: bigSize,
+      },
+    ];
+
+    const results = await writeAttachments(EMAIL, THREAD_ID, attachments, base);
+
+    expect(results).toHaveLength(2);
+
+    // Small attachment written normally
+    expect(results[0].filename).toBe("small.txt");
+    expect(results[0].skipped).toBeUndefined();
+
+    // Large attachment skipped but metadata recorded
+    expect(results[1].filename).toBe("huge.bin");
+    expect(results[1].size_bytes).toBe(bigSize);
+    expect(results[1].skipped).toBe(true);
+
+    // Verify only small file exists on disk
+    const dir = attachmentsDir(EMAIL, THREAD_ID, base);
+    const files = await readdir(dir);
+    expect(files).toContain("small.txt");
+    expect(files).not.toContain("huge.bin");
   });
 });

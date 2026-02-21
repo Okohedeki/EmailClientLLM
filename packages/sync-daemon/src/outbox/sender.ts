@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import nodemailer from "nodemailer";
-import { outboxDir, type OutboxDraft } from "@clawmail3/shared";
+import { outboxDir, type OutboxDraft } from "@maildeck/shared";
 import type { GmailClient } from "../sync/gmail-client.js";
 import { sendViaSMTP, type SmtpCredentials } from "../sync/smtp-sender.js";
 import { transitionDraft } from "./state-machine.js";

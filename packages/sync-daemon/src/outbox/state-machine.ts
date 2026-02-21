@@ -8,7 +8,7 @@ import {
   OUTBOX_TRANSITIONS,
   type OutboxDraft,
   type OutboxStatus,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 
 /**
  * Transition a draft to a new status.

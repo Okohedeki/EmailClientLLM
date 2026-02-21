@@ -1,6 +1,6 @@
 import keytar from "keytar";
 
-const SERVICE_NAME = "clawmail3";
+const SERVICE_NAME = "maildeck";
 
 // ── App Password (IMAP/SMTP) ───────────────────────────────────────
 
@@ -16,8 +16,14 @@ export async function storeAppPassword(
 
 /**
  * Retrieve the stored app password for an account.
+ * Falls back to MAILDECK_APP_PASSWORD env var (for Docker / headless).
  */
 export async function getAppPassword(email: string): Promise<string | null> {
+  const envPass = process.env.MAILDECK_APP_PASSWORD;
+  const envEmail = process.env.MAILDECK_EMAIL;
+  if (envPass && envEmail && envEmail === email) {
+    return envPass;
+  }
   return keytar.getPassword(SERVICE_NAME, `imap:${email}`);
 }
 

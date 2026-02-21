@@ -1,5 +1,5 @@
 /**
- * Interactive setup CLI for ClawMail3.
+ * Interactive setup CLI for MailDeck.
  *
  * Usage:
  *   npx tsx packages/sync-daemon/src/cli/setup.ts
@@ -19,7 +19,7 @@ import {
   type AppConfig,
   type AccountMeta,
   DEFAULTS,
-} from "@clawmail3/shared";
+} from "@maildeck/shared";
 import { readFile, writeFile } from "node:fs/promises";
 import {
   storeAppPassword,
@@ -74,7 +74,7 @@ function askHidden(question: string): Promise<string> {
 async function main() {
   console.log("");
   console.log("  ╔══════════════════════════════════════╗");
-  console.log("  ║       ClawMail3 — Account Setup       ║");
+  console.log("  ║       MailDeck — Account Setup       ║");
   console.log("  ╚══════════════════════════════════════╝");
   console.log("");
 
@@ -104,7 +104,7 @@ async function setupAppPassword() {
   console.log("  │                                               │");
   console.log("  │  1. Go to myaccount.google.com/apppasswords   │");
   console.log("  │  2. You may need to enable 2-Step Verification│");
-  console.log("  │  3. Create an app password (name: ClawMail3)   │");
+  console.log("  │  3. Create an app password (name: MailDeck)   │");
   console.log("  │  4. Copy the 16-character password            │");
   console.log("  │                                               │");
   console.log("  └───────────────────────────────────────────────┘");
@@ -319,7 +319,7 @@ async function saveAccountConfig(email: string): Promise<void> {
   config.review_before_send = await askSendMode();
 
   await atomicWriteJson(configPath(), config);
-  console.log(`  ✓ Config saved to ~/.clawmail3/config.json`);
+  console.log(`  ✓ Config saved to ~/.maildeck/config.json`);
   console.log(`    Send mode: ${config.review_before_send ? "require approval" : "auto-send"}`);
 
   // Save account metadata
@@ -328,6 +328,7 @@ async function saveAccountConfig(email: string): Promise<void> {
     sync_state: "idle",
     last_sync: null,
     history_id: null,
+    last_uid: null,
     sync_depth_days: DEFAULTS.syncDepthDays,
     poll_interval_seconds: DEFAULTS.pollIntervalSeconds,
   };
@@ -347,7 +348,7 @@ async function askSignature(email: string): Promise<void> {
 }
 
 function printDataLocations(email: string) {
-  console.log(`\n  Your email is now at: ~/.clawmail3/accounts/${email}/`);
+  console.log(`\n  Your email is now at: ~/.maildeck/accounts/${email}/`);
   console.log("    Index:    index/threads.jsonl");
   console.log("    Threads:  threads/<id>/messages/*.md");
   console.log("    Contacts: index/contacts.jsonl");
@@ -371,7 +372,7 @@ function waitForOAuthRedirect(): Promise<string> {
 
       if (code) {
         res.writeHead(200, { "Content-Type": "text/html" });
-        res.end("<h2>✓ ClawMail3 authorized!</h2><p>You can close this tab and return to the terminal.</p>");
+        res.end("<h2>✓ MailDeck authorized!</h2><p>You can close this tab and return to the terminal.</p>");
         server.close();
         resolve(code);
         return;

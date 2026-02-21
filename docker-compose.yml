@@ -1,0 +1,10 @@
+services:
+  maildeck:
+    build: .
+    container_name: maildeck
+    restart: unless-stopped
+    environment:
+      - MAILDECK_EMAIL=${MAILDECK_EMAIL}
+      - MAILDECK_APP_PASSWORD=${MAILDECK_APP_PASSWORD}
+    volumes:
+      - ~/.maildeck:/root/.maildeck
